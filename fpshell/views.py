@@ -10,6 +10,9 @@ from . import FPCCParse as fpcc
 
 import os
 
+def index(request):
+    return render(request, 'homepage.html')
+
 class FPCCShellUpload(APIView):
     parser_classes = (FileUploadParser,)
     fpccImgfolder = "fpccshellimages"
