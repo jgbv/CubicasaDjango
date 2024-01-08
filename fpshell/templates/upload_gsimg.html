@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upload Pano Image</title>
+    {% include 'page_headers.html' %}
+
+    <style>
+        .centerImg {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .imgdisplay {
+            position: absolute;
+        }
+
+        #imoutput, #imguploadform {
+            z-index: 2;
+        }
+
+        #imgbackground {
+            z-index: 1;
+        }
+
+
+    </style>
+
+    <script type="text/javascript" defer>
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('promptform').addEventListener('submit', function (event) {
+                event.preventDefault();
+                const searchQuery = document.getElementById('aiprompt').value;
+                fetch('/gsearch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ search_query: searchQuery })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image_url) {
+                        //document.getElementById('result').innerHTML = `<a href="${data.image_url}" target="_blank">First Image Link</a>`;
+                        document.getElementById('imgbackground').src = `"${data.image_url}"`;
+                    } else {
+                        document.getElementById('imgbackground').innerHTML = 'No images found.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching image links:', error);
+                    document.getElementById('result').innerHTML = 'Error fetching image links.';
+                });
+            });
+        });
+
+
+        var loadFile = function(event) {
+            var output = document.getElementById('imoutput');
+            output.src = URL.createObjectURL(event.target.files[0]);
+            output.onload = function() {
+              URL.revokeObjectURL(output.src) // free memory
+            }
+        };
+
+        function parseFP(){
+        var i = 0;
+        if (i == 0) {
+            i = 1;
+            var elem = document.getElementById("progBar");
+            var width = 1;
+            var id = setInterval(frame, 20);
+            function frame() {
+                if (width > 100) {
+                
+                clearInterval(id);
+                i = 0;
+                } 
+                else if (width == 100){
+                document.getElementById("fplayers").style.display="block";
+                }
+                else {
+                width++;
+                elem.style.width = width + "%";
+                }
+            }
+            }
+        }
+
+
+        function searchImages() {
+            var googleurl = "https://www.google.com/search?rlz=1C1CHBF_enUS1012US1012";
+            var searchQuery = document.getElementById('aiprompt').value;
+            var qstring = searchQuery.replaceAll(" ", "+");
+            qstring = googleurl+"&q="+qstring+"&tbm=isch";
+            console.log(qstring);
+            
+            
+            fetch(qstring, { mode: 'no-cors' })
+                .then(response => {
+                    console.log(`response: ${response}`);
+                    response.json();
+                })
+                .then(data => {
+                    if (data && data.length > 0) {
+                        document.getElementById('imgbackground').innerHTML = `<a href="${data[0]}" target="_blank">First Image Link</a>`;
+                    } else {
+                        console.log(`HERE: ${data}`);
+                        document.getElementById('imgbackground').innerHTML = 'No images found.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching image links:', error);
+                    document.getElementById('imgbackground').innerHTML = 'Error fetching image links.';
+                });
+            
+        }
+
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var imgcounter = 0; 
+        function cycleImgs(){
+            const img1 = "https://c.wallhere.com/photos/3c/a8/2048x1024_px_artwork_river-1261895.jpg!d";
+            const img2 = "https://c.wallhere.com/photos/10/e9/2048x1024_px_space-678100.jpg!d";
+            const img3 = "https://i.pinimg.com/originals/c7/a0/cb/c7a0cbef38a01eda61750d0cbdac180e.png"
+            const img4 = "https://www.imgbase.info/images/safe-wallpapers/digital_art/abstract/48793_abstract_trippy_vivid_colorful.jpg";
+            var imgs = [img1, img2, img3, img4]
+            var imgbg = document.getElementById("imgbackground");
+            imgbg.src = imgs[imgcounter];
+            if (imgcounter == imgs.length){
+                imgcounter=0;
+            } else{
+                imgcounter++;
+            }
+        }   
+
+    </script>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Upload PNG Image</h1>
+        <div class="row">
+            
+            <div class="col-sm-6 colbody" id="imguploadform">
+                
+                <form runat="server">
+                    <input type="file" accept="image/*" onchange="loadFile(event)">
+                  </form>
+                  <br><hr>
+                
+                {% comment %} <button class="btn btn-primary" onclick="parseFP()">Parse Floorplan</button> {% endcomment %}
+
+            </div>
+
+            <div class="col-sm-3 colbody">
+                <h3>Enter prompt for AI-generated background</h3>
+                <form method="post" id="promptform">
+                    {% csrf_token %}
+                    {% comment %} <label for="aiprompt">Enter your search query:</label> {% endcomment %}
+                    <input type="text" name="aiprompt" id="aiprompt">
+                    {% comment %} <button type="submit">Get Image</button> {% endcomment %}
+                    <button onclick="cycleImgs()">Get Background</button>  
+                    {% comment %} <button type="button" onclick="searchImages()">Search JS</button> {% endcomment %}
+                </form>
+            </div>
+
+        </div>
+
+        <div class="row">
+            <div class="col-sm-3 colbody">
+                <img id="uploadFP"></div>
+                <img class="imgdisplay" id="imoutput" style="width: 75%; padding:50px;"/>
+                <img class="imgdisplay" id="imgbackground" style="width: 75%; padding:50px;"/>
+                <br><br><br>
+            </div>
+        </div>
+        <div class="row"></div>
+    </div>
+    
+</body>
+</html>

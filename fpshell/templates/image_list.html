@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Uploaded PNG Images</title>
+    {% include 'page_headers.html' %}
+</head>
+<body>
+    <div class="row">
+        <div class="col colbody">
+            <h1>Uploaded PNG Images</h1>
+            {% for image in images %}
+                <img src="{{ image.image.url }}" alt="{{ image.image.name }}" width="200">
+                <br>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
